@@ -29,7 +29,7 @@ def mousePoints(event, x, y, flags, params):
         counter2 += 1
 
 
-img = cv2.imread("template/test-template-4.jpg")
+img = cv2.imread("template/test-template-2.jpg")
 img = cv2.resize(img, (0, 0), None, scale, scale)
 
 while True:
