@@ -86,7 +86,7 @@ for x, r in enumerate(roi):
 
     if r[2] == 'text':
         myData.append(pytesseract.image_to_string(imgCrop))
-        print(r[3] + ' ' + pytesseract.image_to_string(imgCrop))
+        # print(r[3] + ' ' + pytesseract.image_to_string(imgCrop))
 
     # cv2.putText(imgShow, str(myData[x]), (r[0][0], r[0][1]), cv2.FONT_HERSHEY_PLAIN, 2.5, (0, 0, 255), 4)
 
