@@ -25,7 +25,9 @@ def find_between_r(s, first, last):
 template_id = 2
 
 per = 100
-pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = r"D:\Tesseract\tesseract.exe"
+
 
 # roi = [[(354, 489), (637, 523), 'text', 'ref-name'],  #template_1
 #          [(352, 527), (734, 554), 'text', 'ref-place'],
@@ -36,7 +38,8 @@ roi = [[(174, 444), (539, 477), 'text', 'ref-name'], #template_2
        [(172, 479), (562, 512), 'text', 'ref-address'],
        [(170, 551), (440, 585), 'text', 'ref-date'],
        [(1102, 417), (1609, 604), 'text', 'free-text-pat'],
-       [(147, 662), (1612, 1314), 'text', 'free-text-pat']]
+       [(147, 662), (1612, 1314), 'text', 'free-text-pat'],
+       [(142, 799), (1617, 2062), 'text', 'free-text-heading']]
 
 # roi = [[(107, 372), (1632, 2292), 'text', 'free-text']] #template_3
 
@@ -154,12 +157,15 @@ if template_id == 1:
     print("MRN: " + MRN)
 
 if template_id == 2:
+    headings_index = []
+
     ref_name = myData[0]
     ref_address = myData[1]
     ref_date = myData[2]
 
     free_text_patient_id = myData[3]
     free_text_patient_info = myData[4]
+    free_text_heading = myData[5]
 
     patient_id = find_between(free_text_patient_id, "Patient ID:", "Accession")
     accession_number = find_between(free_text_patient_id, "Number:", "Reported")
@@ -208,6 +214,39 @@ if template_id == 2:
     print("patient_name: " + patient_name)
     print("DOB: " + DOB)
     print("address: " + address)
+    all_text = free_text_heading
+
+    all_text = all_text.split("\n")
+    for s in all_text:
+        if s == "" or s == " ":
+            all_text.remove(s)
+    # print(all_text)
+
+    for i, text in enumerate(all_text):
+        if text.isupper():
+            headings_index.append(i)
+            # print(text)
+    # print(headings_index)
+
+    headings_pointer = 1
+    last_message_pointer = 0
+    for i, text in enumerate(all_text):
+        if "Electronically" in text:
+            last_message_pointer = i
+            break
+
+    for i, index in enumerate(headings_index):
+        if len(headings_index) != headings_pointer:
+            next_index = headings_index[i + 1]
+            print("For heading " + all_text[index])
+            for j in range(index + 1, next_index):
+                print(all_text[j])
+
+            headings_pointer = headings_pointer + 1
+        else:
+            print("For heading " + all_text[index])
+            for k in range(index + 1, last_message_pointer - 1):
+                print(all_text[k])
 
 if template_id == 3:
     free_text = myData[0]
