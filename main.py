@@ -22,11 +22,11 @@ def find_between_r(s, first, last):
         return ""
 
 
-template_id = 2
+template_id = 3
 
 per = 100
-# pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
-pytesseract.pytesseract.tesseract_cmd = r"D:\Tesseract\tesseract.exe"
+pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# pytesseract.pytesseract.tesseract_cmd = r"D:\Tesseract\tesseract.exe"
 
 
 # roi = [[(354, 489), (637, 523), 'text', 'ref-name'],  #template_1
@@ -34,21 +34,21 @@ pytesseract.pytesseract.tesseract_cmd = r"D:\Tesseract\tesseract.exe"
 #          [(354, 564), (759, 634), 'text', 'ref-address'],
 #     [(247, 762), (1532, 2267), 'text', 'free-text']]
 
-roi = [[(174, 444), (539, 477), 'text', 'ref-name'], #template_2
-       [(172, 479), (562, 512), 'text', 'ref-address'],
-       [(170, 551), (440, 585), 'text', 'ref-date'],
-       [(1102, 417), (1609, 604), 'text', 'free-text-pat'],
-       [(147, 662), (1612, 1314), 'text', 'free-text-pat'],
-       [(142, 799), (1617, 2062), 'text', 'free-text-heading']]
+# roi = [[(174, 444), (539, 477), 'text', 'ref-name'], #template_2
+#        [(172, 479), (562, 512), 'text', 'ref-address'],
+#        [(170, 551), (440, 585), 'text', 'ref-date'],
+#        [(1102, 417), (1609, 604), 'text', 'free-text-pat'],
+#        [(147, 662), (1612, 1314), 'text', 'free-text-pat'],
+#        [(142, 799), (1617, 2062), 'text', 'free-text-heading']]
 
-# roi = [[(107, 372), (1632, 2292), 'text', 'free-text']] #template_3
+roi = [[(107, 372), (1632, 2292), 'text', 'free-text']] #template_3
 
 
 # roi = [[(42, 427), (1619, 2269), 'text', 'free-text']]  # template_4
 
 # folder location C:\Users\shaki\Desktop\template
 
-imgQ = cv2.imread("blank-templates/blank-template-2.jpg")
+imgQ = cv2.imread("blank-templates/blank-template-3.jpg")
 
 h, w, c = imgQ.shape
 # imgQ = cv2.resize(imgQ, (w // 3, h // 3))
@@ -57,7 +57,7 @@ orb = cv2.ORB_create(5000)
 kp1, des1 = orb.detectAndCompute(imgQ, None)
 # impKp1 = cv2.drawKeypoints(imgQ,kp1,None)
 
-img = cv2.imread("template/test-template-2.jpg")
+img = cv2.imread("template/template3/test-2-template-3.jpg")
 
 kp2, des2 = orb.detectAndCompute(img, None)
 bf = cv2.BFMatcher(cv2.NORM_HAMMING)
@@ -83,7 +83,7 @@ for x, r in enumerate(roi):
     cv2.rectangle(imgMask, ((r[0][0]), r[0][1]), ((r[1][0]), r[1][1]), (0, 255, 0), cv2.FILLED)
     imgShow = cv2.addWeighted(imgShow, 0.99, imgMask, 0.1, 0)
 
-    imgCrop = imgScan[r[0][1]:r[1][1], r[0][0]:r[1][0]]
+    imgCrop = imgShow[r[0][1]:r[1][1], r[0][0]:r[1][0]]
     # to show cropped images
     # cv2.imshow(str(x), imgCrop)
 
@@ -331,11 +331,11 @@ if template_id == 3:
         if p == "" or p == " ":
             patient_events.remove(p)
 
-    for i,s in enumerate(summary):
-        print("Summary "+str(i)+": "+s)
+    for i, s in enumerate(summary):
+        print("Summary " + str(i) + ": " + s)
 
-    for i,p in enumerate(patient_events):
-        print("Patient Events "+str(i)+": "+p)
+    for i, p in enumerate(patient_events):
+        print("Patient Events " + str(i) + ": " + p)
 
     print("conclusions: " + conclusions)
     print("distribution: " + distribution)
@@ -351,8 +351,8 @@ if template_id == 4:
     ref_address = find_between(free_text, "Address:", "Referral date")
     patient_name = find_between(free_text, "Patient name:", "Patient DOB")
     DOB = find_between(free_text, "Patient DOB:", "Address:")
-    address = find_between(free_text, str(DOB)+"Address:", "Phone")
-    phone = find_between(free_text, str(address)+"Phone:", "\n")
+    address = find_between(free_text, str(DOB) + "Address:", "Phone")
+    phone = find_between(free_text, str(address) + "Phone:", "\n")
     medical_history = find_between(free_text, "Medical History", "Medications")
     medication = find_between(free_text, "Medications", "Dr")
 
@@ -389,8 +389,7 @@ if template_id == 4:
     medical_history = medical_history.strip()
     medication = medication.strip()
 
-
-    print("referrer: "+referrer)
+    print("referrer: " + referrer)
     print("referrer_id: " + referrer_id)
     print("ref_phone: " + ref_phone)
     print("ref_address: " + ref_address)
@@ -401,8 +400,37 @@ if template_id == 4:
 
     medical_history = medical_history.split("-")
     medication = medication.split("-")
-    print(medical_history)
-    print(medication)
+
+    for i, m in enumerate(medical_history):
+        if "\n" in m:
+            temp_string = m.replace("\n", "")
+            temp_string = temp_string.replace("\n", "")
+            temp_string = temp_string.replace("\n", "")
+            medical_history.remove(m)
+            medical_history.insert(i, temp_string)
+
+    for m in medical_history:
+        if m == "" or m == " ":
+            medical_history.remove(m)
+
+    for i, m in enumerate(medical_history):
+        print("Medical History  " + str(i) + ": " + m)
+
+    for i, m in enumerate(medication):
+        if "\n" in m or "\n\n" in m:
+            temp_string = m.replace("\n", "")
+            temp_string = temp_string.replace("\n", "")
+            temp_string = temp_string.replace("\n", "")
+            temp_string = temp_string.replace("\n\n", "")
+            medication.remove(m)
+            medication.insert(i, temp_string)
+
+    for m in medication:
+        if m == "" or m == " ":
+            medication.remove(m)
+
+    for i, m in enumerate(medication):
+        print("Medication   " + str(i) + ": " + m)
 
 
 # cv2.imshow('Output', imgScan)

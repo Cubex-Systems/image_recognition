@@ -1,67 +1,96 @@
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.preprocessing import image
-from tensorflow.keras.optimizers import RMSprop
-import matplotlib.pyplot as plt
-import tensorflow as tf
-import numpy as np
-import cv2
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+
 import os
 
-train = ImageDataGenerator(rescale=1 / 255)
-validation = ImageDataGenerator(rescale=1 / 255)
+size = (48, 48)
 
-train_dataset = train.flow_from_directory("ML/training",
-                                          target_size=(1280, 720),
-                                          batch_size=1,
-                                          class_mode='sparse')
-validation_dataset = train.flow_from_directory("ML/validation",
-                                          target_size=(1280, 720),
-                                          batch_size=1,
-                                          class_mode='sparse')
+train_data_dir = 'ML/train'
+validation_data_dir = 'ML/validation'
 
-print(train_dataset.class_indices)
+train_datagen = ImageDataGenerator(
+    rescale=1. / 255
+)
 
-model = tf.keras.models.Sequential([tf.keras.layers.Conv2D(16, (3, 3), activation='relu', input_shape=(1280, 720, 3)),
-                                    tf.keras.layers.MaxPool2D(2, 2),
-                                    #
-                                    tf.keras.layers.Conv2D(32, (3, 3), activation='relu'),
-                                    tf.keras.layers.MaxPool2D(2, 2),
-                                    #
-                                    tf.keras.layers.Conv2D(64, (3, 3), activation='relu'),
-                                    tf.keras.layers.MaxPool2D(2, 2),
-                                    ##
-                                    tf.keras.layers.Flatten(),
-                                    ##
-                                    tf.keras.layers.Dense(512, activation='relu'),
-                                    ##
-                                    tf.keras.layers.Dense(1, activation='sigmoid')
+validation_datagen = ImageDataGenerator(
+    rescale=1. / 255
+)
 
-                                    ])
+train_generator = train_datagen.flow_from_directory(
+    train_data_dir,
+    color_mode='grayscale',
+    target_size=size,
+    batch_size=32,
+    class_mode='categorical',
+    shuffle=True
+)
 
-model.compile(loss='binary_crossentropy',
-              optimizer=RMSprop(learning_rate=0.001), #
-              metrics=['accuracy'])
+validation_generator = train_datagen.flow_from_directory(
+    validation_data_dir,
+    color_mode='grayscale',
+    target_size=size,
+    batch_size=32,
+    class_mode='categorical',
+    shuffle=True
+)
 
-model_fit = model.fit(train_dataset,
-                      steps_per_epoch=1,
-                      epochs=1,
-                      validation_data=validation_dataset)
+class_labels = ['template_1', 'template_2', 'template_3', 'template_4']
+
+img, label = train_generator.__next__()
 
 
-dir_path = "ML/testing"
+model = Sequential()
 
-# for i in os.listdir(dir_path):
-img = image.load_img(dir_path+'//'+'test-template-3.jpg',target_size=(1280,720))
-	# plt.imshow(img)
-	# plt.show()
+model.add(Conv2D(32,kernel_size=(3,3),activation='relu', input_shape=(48,48,1)))
 
-X= image.img_to_array(img)
-X= np.expand_dims(X,axis=0)
+model.add(Conv2D(64,kernel_size=(3,3),activation='relu', ))
+model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(Dropout(0.1))
 
-images = np.vstack([X])
 
-val = model.predict(images)
+model.add(Conv2D(128,kernel_size=(3,3),activation='relu', ))
+model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(Dropout(0.1))
 
-print(val)
+model.add(Conv2D(256,kernel_size=(3,3),activation='relu', ))
+model.add(MaxPooling2D(pool_size=(2,2)))
+model.add(Dropout(0.1))
 
-print(np.argmax(val))
+model.add(Flatten())
+model.add(Dense(512,activation='relu'))
+model.add(Dropout(0.2))
+
+model.add(Dense(4,activation='softmax'))
+
+model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
+
+train_data_dir = 'ML/train'
+validation_data_dir = 'ML/validation'
+
+num_train_imgs = 0
+for root,dirs,files in os.walk(train_data_dir):
+    num_train_imgs += len(files)
+
+num_test_imgs = 0
+for root, dirs, files in os.walk(validation_data_dir):
+    num_test_imgs += len(files)
+
+
+print(num_train_imgs)
+
+print(num_test_imgs)
+
+
+epochs = 100
+
+history = model.fit(
+    train_generator,
+    steps_per_epoch=1,
+    epochs=epochs,
+    validation_data=validation_generator,
+    validation_steps=1
+)
+
+model.save('model_file.h5')
